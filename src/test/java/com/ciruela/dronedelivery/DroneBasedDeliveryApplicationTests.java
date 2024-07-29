@@ -78,20 +78,23 @@ class DroneBasedDeliveryApplicationTests {
 	
 	@Test
 	void shouldReturnDroneWithMedicationsLoaded() {
-		Medication medication1 = Medication.builder().id(Long.valueOf(1))
-				.code("Ibuprofen")
+		Medication medication1 = Medication.builder().id(Long.valueOf(2))
+				.name("IbuprofenTest1")
+				.code("MED_011")
 				.image("/images/ibuprofen.jpg")
 				.weight(30)
 				.build();
 		
 		Medication medication2 = Medication.builder().id(Long.valueOf(2))
-				.code("Amoxicillin")
+				.name("IbuprofenTest2")
+				.code("MED_012")
 				.image("/images/amoxicillin.jpg")
 				.weight(30)
 				.build();
 		
 		Medication medication3 = Medication.builder().id(Long.valueOf(3))
-				.code("Omeprazole")
+				.name("IbuprofenTest3")
+				.code("MED_013")
 				.image("/images/omeprazole.jpg")
 				.weight(30)
 				.build();
