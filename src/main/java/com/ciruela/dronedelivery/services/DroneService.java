@@ -34,6 +34,7 @@ public class DroneService {
 			evaluateMedicationsWeightAgainstDroneWeightLimit(medications, drone);
 			
 			drone.setMedications(medications);
+			drone.setState(State.LOADED);
 			repository.save(drone);
 		}else {
 			throw new Exception("Drone does not exist");

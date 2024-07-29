@@ -138,7 +138,7 @@ class DroneBasedDeliveryApplicationTests {
 	
 	@Test
 	void shouldReturnAvailableDroneForLoading() {
-		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/medications", String.class, 1L);
+		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/available", String.class, 1L);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());
@@ -149,7 +149,7 @@ class DroneBasedDeliveryApplicationTests {
 	
 	@Test
 	void shouldReturnDroneInformation() {
-		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/medications", String.class, 1L);
+		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/battery", String.class, 1L);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());
