@@ -22,22 +22,39 @@ public class DroneService {
 		this.repository = repository;
 	}
 	
+	public Drone findById(Long id) throws Exception {
+		Optional<Drone> droneOptional = repository.findById(id);
+		if(droneOptional.isPresent()) {
+			return droneOptional.get();
+		}else {
+			throw new Exception("Drone does not exist");
+		}
+	}
+	
 	public Drone registerNewDrone(@Valid Drone drone) {
 		return repository.save(drone);
 	}
 	
-	public void loadDroneWithMedication(List<Medication> medications, Long droneId) throws Exception {
+	public Drone loadDroneWithMedication(List<Medication> medications, Long droneId) throws Exception {
 		Optional<Drone> droneOptional = repository.findById(droneId);
 		if(droneOptional.isPresent()) {
 			Drone drone = droneOptional.get();
 			
 			evaluateMedicationsWeightAgainstDroneWeightLimit(medications, drone);
+			checkDroneBatteryCapacityIfCapableOfLoading(drone);
 			
 			drone.setMedications(medications);
 			drone.setState(State.LOADED);
-			repository.save(drone);
+			
+			return repository.save(drone);
 		}else {
 			throw new Exception("Drone does not exist");
+		}
+	}
+
+	private void checkDroneBatteryCapacityIfCapableOfLoading(Drone drone) throws Exception {
+		if(drone.getBattery() < 25f) {
+			throw new Exception("Drone cannot load medications if battery capacity is 25% below");
 		}
 	}
 

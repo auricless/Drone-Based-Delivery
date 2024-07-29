@@ -29,6 +29,16 @@ public class DroneRestController {
 		this.service = service;
 	}
 	
+	@GetMapping("/{droneId}")
+	public ResponseEntity<Drone> findById(@PathVariable Long droneId){
+		try {
+			Drone drone = service.findById(droneId);
+			return ResponseEntity.ok(drone);
+		} catch (Exception e) {
+			return ResponseEntity.notFound().build();
+		}
+	}
+	
 	@PostMapping("/")
 	public ResponseEntity<Void> registerDrone(@Valid @RequestBody Drone drone, UriComponentsBuilder ucb){
 		Drone registerNewDrone = service.registerNewDrone(drone);
@@ -40,17 +50,17 @@ public class DroneRestController {
 	    return ResponseEntity.created(locationOfRegisteredDrone).build();
 	}
 	
-	@PutMapping("/api/v1/drone/{droneId}/loadMedication")
+	@PutMapping("/{droneId}/loadMedication")
 	public ResponseEntity<Drone> loadMedicationsToDrone(@PathVariable Long droneId, @RequestBody List<Medication> medications){
 		try {
-			service.loadDroneWithMedication(medications, droneId);
-			return ResponseEntity.ok().build();
+			Drone droneWithMedication = service.loadDroneWithMedication(medications, droneId);
+			return ResponseEntity.ok(droneWithMedication);
 		} catch (Exception e) {
 			return ResponseEntity.notFound().build();
 		}
 	}
 	
-	@GetMapping("/api/v1/drone/{droneId}/medications")
+	@GetMapping("/{droneId}/medications")
 	public ResponseEntity<List<Medication>> getLoadedMedicationsByDrone(@PathVariable Long droneId){
 		try {
 			List<Medication> medicationsByDrone = service.getMedicationsByDrone(droneId);
@@ -60,7 +70,7 @@ public class DroneRestController {
 		}
 	}
 	
-	@GetMapping("/api/v1/drone/{droneId}/available")
+	@GetMapping("/{droneId}/available")
 	public ResponseEntity<Boolean> isDroneAvailableForLoading(@PathVariable Long droneId){
 		try {
 			boolean isDroneAvailable = service.isDroneAvailable(droneId);
@@ -70,7 +80,7 @@ public class DroneRestController {
 		}
 	}
 	
-	@GetMapping("/api/v1/drone/{droneId}/battery")
+	@GetMapping("/{droneId}/battery")
 	public ResponseEntity<Float> getDroneBatteryCapacity(@PathVariable Long droneId){
 		try {
 			float droneBatteryCapacity = service.getDroneBatteryCapacity(droneId);

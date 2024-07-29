@@ -6,6 +6,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +22,11 @@ import com.ciruela.dronedelivery.entities.Drone;
 import com.ciruela.dronedelivery.entities.Medication;
 import com.ciruela.dronedelivery.entities.Model;
 import com.ciruela.dronedelivery.entities.State;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+
+import net.minidev.json.JSONArray;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DroneBasedDeliveryApplicationTests {
@@ -32,34 +37,36 @@ class DroneBasedDeliveryApplicationTests {
 	@Test
 	void shouldCreateNewDroneOnRegisterDrone() {
 		Drone actualDrone = Drone.builder()
-			.id(Long.valueOf(1))
 			.model(Model.HEAVY_WEIGHT)
-			.serialNumber("56437865798436")
+			.serialNumber("DRONE011")
 			.battery(75f)
 			.medications(Collections.emptyList())
+			.weightLimit(100)
+			.state(State.IDLE)
 			.build();
 		
 		Drone expectedDrone = Drone.builder()
-				.id(Long.valueOf(1))
-				.model(Model.HEAVY_WEIGHT)
-				.serialNumber("56437865798436")
-				.battery(75f)
-				.medications(Collections.emptyList())
-				.state(State.IDLE)
-				.build();
+			.model(Model.HEAVY_WEIGHT)
+			.serialNumber("DRONE011")
+			.battery(75f)
+			.medications(Collections.emptyList())
+			.weightLimit(100)
+			.state(State.IDLE)
+			.id(11L)
+			.build();
 		
 		ResponseEntity<String> createResponse = restTemplate.postForEntity("/api/v1/drone/", actualDrone, String.class);
 		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 		
 		URI location = createResponse.getHeaders().getLocation();
 		ResponseEntity<String> responseDrone = restTemplate.getForEntity(location, String.class);
-		assertThat(responseDrone).isEqualTo(HttpStatus.OK);
+		assertThat(responseDrone.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(responseDrone.getBody());
-		Number id = documentContext.read("$.id");
+		Long id = documentContext.read("$.id", Long.class);
 		String model = documentContext.read("$.model");
-		Long serialNumber = documentContext.read("$.serialNumber");
-		Float battery = documentContext.read("$.battery");
+		String serialNumber = documentContext.read("$.serialNumber");
+		Float battery = documentContext.read("$.battery", Float.class);
 		List<Medication> medications = documentContext.read("$.medications");
 		
 		assertThat(id).isEqualTo(expectedDrone.getId());
@@ -72,20 +79,20 @@ class DroneBasedDeliveryApplicationTests {
 	@Test
 	void shouldReturnDroneWithMedicationsLoaded() {
 		Medication medication1 = Medication.builder().id(Long.valueOf(1))
-				.code("YGKL54PO4")
-				.image("temp-1.JPEG")
+				.code("Ibuprofen")
+				.image("/images/ibuprofen.jpg")
 				.weight(30)
 				.build();
 		
 		Medication medication2 = Medication.builder().id(Long.valueOf(2))
-				.code("YGKL54PO4")
-				.image("temp-2.JPEG")
+				.code("Amoxicillin")
+				.image("/images/amoxicillin.jpg")
 				.weight(30)
 				.build();
 		
 		Medication medication3 = Medication.builder().id(Long.valueOf(3))
-				.code("YGKL54PO4")
-				.image("temp-3.JPEG")
+				.code("Omeprazole")
+				.image("/images/omeprazole.jpg")
 				.weight(30)
 				.build();
 		
@@ -94,69 +101,83 @@ class DroneBasedDeliveryApplicationTests {
 		loadedMedications.add(medication2);
 		loadedMedications.add(medication3);
 		
-		Drone actualDrone = Drone.builder()
-				.id(Long.valueOf(1))
-				.model(Model.HEAVY_WEIGHT)
-				.serialNumber("56437865798436")
-				.battery(75f)
-				.medications(Collections.emptyList())
-				.build();
-		
-		HttpEntity<Drone> request = new HttpEntity<>(actualDrone);
+		HttpEntity<List<Medication>> request = new HttpEntity<>(loadedMedications);
 		ResponseEntity<String> response = restTemplate.exchange("/api/v1/drone/{id}/loadMedication", HttpMethod.PUT, request, String.class, 1L);
 		
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());
-		Number id = documentContext.read("$.id");
+		Long id = documentContext.read("$.id", Long.class);
 		String model = documentContext.read("$.model");
-		Long serialNumber = documentContext.read("$.serialNumber");
-		Float battery = documentContext.read("$.battery");
-		List<Medication> medications = documentContext.read("$.medications");
+		String serialNumber = documentContext.read("$.serialNumber");
+		Float battery = documentContext.read("$.battery", Float.class);
+		List<Map<String, Object>> medicationsListOfMap = documentContext.read("$.medications");
+		
+		List<Medication> medications = medicationsListOfMap.stream()
+	    .map(medicationMap -> {
+	        Medication medication = new Medication();
+	        medication.setId(((Number) medicationMap.get("id")).longValue());
+	        medication.setName((String) medicationMap.get("name"));
+	        medication.setWeight((Integer) medicationMap.get("weight"));
+	        medication.setCode((String) medicationMap.get("code"));
+	        medication.setImage((String) medicationMap.get("image"));
+	        return medication;
+	    }).collect(Collectors.toList());
 		
 		assertThat(id).isEqualTo(1L);
-		assertThat(model).isEqualTo(Model.HEAVY_WEIGHT.toString());
-		assertThat(serialNumber).isEqualTo("56437865798436");
-		assertThat(battery).isEqualTo("75f");
+		assertThat(model).isEqualTo(Model.LIGHT_WEIGHT.toString());
+		assertThat(serialNumber).isEqualTo("DRONE001");
+		assertThat(battery).isEqualTo(100.0f);
 		assertThat(medications).isNotNull();
 	    assertThat(medications).hasOnlyElementsOfType(Medication.class);
-	    assertThat(medications).hasSize(0);
+	    assertThat(medications).hasSize(3);
 	}
 	
 	@Test
 	void shouldReturnMedicationByDrone() {
-		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/medications", String.class, 1L);
+		ResponseEntity<String> response = restTemplate.getForEntity("/api/v1/drone/{id}/medications", String.class, 3L);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());
-		List<Medication> medications = documentContext.read("$.medications");
+		List<Map<String, Object>> medicationsListOfMap = documentContext.read("$");
+		
+		List<Medication> medications = medicationsListOfMap.stream()
+	    .map(medicationMap -> {
+	        Medication medication = new Medication();
+	        medication.setId(((Number) medicationMap.get("id")).longValue());
+	        medication.setName((String) medicationMap.get("name"));
+	        medication.setWeight((Integer) medicationMap.get("weight"));
+	        medication.setCode((String) medicationMap.get("code"));
+	        medication.setImage((String) medicationMap.get("image"));
+	        return medication;
+	    }).collect(Collectors.toList());
 		
 		assertThat(medications).isNotNull();
-		assertThat(medications).hasSize(3);
-		assertThat(medications).hasExactlyElementsOfTypes(Medication.class);
+	    assertThat(medications).hasOnlyElementsOfType(Medication.class);
+	    assertThat(medications).hasSize(3);
 	}
 	
 	@Test
 	void shouldReturnAvailableDroneForLoading() {
-		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/available", String.class, 1L);
+		ResponseEntity<String> response = restTemplate.getForEntity("/api/v1/drone/{id}/available", String.class, 1L);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());
-		boolean isAvailable = documentContext.read("$.isAvailable");
+		boolean isAvailable = documentContext.read("$", Boolean.class);
 		
-		assertThat(isAvailable).isEqualTo(true);
+		assertThat(isAvailable).isEqualTo(false);
 	}
 	
 	@Test
 	void shouldReturnDroneInformation() {
-		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/battery", String.class, 1L);
+		ResponseEntity<String> response = restTemplate.getForEntity("/api/v1/drone/{id}/battery", String.class, 1L);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());
-		Float battery = documentContext.read("$.battery");
+		Float battery = documentContext.read("$", Float.class);
 		
 		assertThat(battery).isNotNull();
-		assertThat(battery).isEqualTo(75f);
+		assertThat(battery).isEqualTo(100.0f);
 	}
 
 }

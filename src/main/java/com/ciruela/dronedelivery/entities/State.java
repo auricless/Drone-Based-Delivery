@@ -3,11 +3,11 @@ package com.ciruela.dronedelivery.entities;
 public enum State {
 	
 	IDLE("IDLE"), 
-	LOADING("IDLE"), 
-	LOADED("IDLE"), 
-	DELIVERING("IDLE"), 
-	DELIVERED("IDLE"), 
-	RETURNING("IDLE");
+	LOADING("LOADING"), 
+	LOADED("LOADED"), 
+	DELIVERING("DELIVERING"), 
+	DELIVERED("DELIVERED"), 
+	RETURNING("RETURNING");
 	
 	private String value;
 	
