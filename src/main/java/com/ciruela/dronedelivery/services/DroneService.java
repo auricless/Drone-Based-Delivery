@@ -1,5 +1,6 @@
 package com.ciruela.dronedelivery.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +11,7 @@ import com.ciruela.dronedelivery.entities.Medication;
 import com.ciruela.dronedelivery.entities.Model;
 import com.ciruela.dronedelivery.entities.State;
 import com.ciruela.dronedelivery.repositories.DroneRepository;
+import com.ciruela.dronedelivery.repositories.MedicationRepository;
 
 import jakarta.validation.Valid;
 
@@ -18,8 +20,15 @@ public class DroneService {
 	
 	private final DroneRepository repository;
 	
-	public DroneService(DroneRepository repository) {
+	private final MedicationRepository medicationRepository;
+	
+	public DroneService(DroneRepository repository, MedicationRepository medicationRepository) {
 		this.repository = repository;
+		this.medicationRepository = medicationRepository;
+	}
+	
+	public Iterable<Drone> findAll() {
+		return repository.findAll();
 	}
 	
 	public Drone findById(Long id) throws Exception {
@@ -43,7 +52,13 @@ public class DroneService {
 			evaluateMedicationsWeightAgainstDroneWeightLimit(medications, drone);
 			checkDroneBatteryCapacityIfCapableOfLoading(drone);
 			
-			drone.setMedications(medications);
+			Iterable<Medication> savedMedications = medicationRepository.saveAll(medications);
+			List<Medication> medicationList = new ArrayList<>();
+	        for (Medication medication : savedMedications) {
+	            medicationList.add(medication);
+	        }
+			
+			drone.setMedications(medicationList);
 			drone.setState(State.LOADED);
 			
 			return repository.save(drone);
@@ -118,6 +133,26 @@ public class DroneService {
 		if(droneOptional.isPresent()) {
 			Drone drone = droneOptional.get();
 			return drone.getBattery();
+		}else {
+			throw new Exception("Drone does not exist");
+		}
+	}
+
+	public void updateDroneState(Long id, State loading) throws Exception {
+		Optional<Drone> droneOptional = repository.findById(id);
+		if(droneOptional.isPresent()) {
+			Drone drone = droneOptional.get();
+			drone.setState(loading);
+		}else {
+			throw new Exception("Drone does not exist");
+		}
+	}
+	
+	public void updateDroneBattery(Long id, float batteryCapacity) throws Exception {
+		Optional<Drone> droneOptional = repository.findById(id);
+		if(droneOptional.isPresent()) {
+			Drone drone = droneOptional.get();
+			drone.setBattery(batteryCapacity);
 		}else {
 			throw new Exception("Drone does not exist");
 		}
