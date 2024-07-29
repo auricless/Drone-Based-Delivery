@@ -143,6 +143,7 @@ public class DroneService {
 		if(droneOptional.isPresent()) {
 			Drone drone = droneOptional.get();
 			drone.setState(loading);
+			repository.save(drone);
 		}else {
 			throw new Exception("Drone does not exist");
 		}
@@ -153,6 +154,7 @@ public class DroneService {
 		if(droneOptional.isPresent()) {
 			Drone drone = droneOptional.get();
 			drone.setBattery(batteryCapacity);
+			repository.save(drone);
 		}else {
 			throw new Exception("Drone does not exist");
 		}

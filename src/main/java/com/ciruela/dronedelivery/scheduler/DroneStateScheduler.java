@@ -16,7 +16,7 @@ public class DroneStateScheduler {
 		this.droneService = droneService;
 	}
 
-	@Scheduled(fixedRate = 10000)
+	@Scheduled(fixedRate = 5000)
 	public void updateDroneStates() {
 		try {
 			Iterable<Drone> drones = droneService.findAll();
@@ -24,6 +24,8 @@ public class DroneStateScheduler {
 			for (Drone drone : drones) {
 				updateDroneState(drone);
 			}
+			
+			System.out.println("===================================");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -33,40 +35,30 @@ public class DroneStateScheduler {
 		switch (drone.getState()) {
 			case IDLE:
 				if (droneCanLoad(drone)) {
-					System.out.println(String.format("Drone %s is now LOADING", drone.getSerialNumber()));
+					System.out.println(String.format("Drone %s is now LOADING with battery %s", drone.getSerialNumber(), drone.getBattery()));
 					droneService.updateDroneState(drone.getId(), State.LOADING);
 				}
 				break;
 			case LOADING:
-				if (droneIsLoaded(drone)) {
-					System.out.println(String.format("Drone %s is now LOADED", drone.getSerialNumber()));
-					droneService.updateDroneState(drone.getId(), State.LOADED);
-				}
+				System.out.println(String.format("Drone %s is now LOADED with battery %s", drone.getSerialNumber(), drone.getBattery()));
+				droneService.updateDroneState(drone.getId(), State.LOADED);
 				break;
 			case LOADED:
-				if (droneCanDeliver(drone)) {
-					System.out.println(String.format("Drone %s is now DELIVERING", drone.getSerialNumber()));
-					droneService.updateDroneState(drone.getId(), State.DELIVERING);
-				}
+				System.out.println(String.format("Drone %s is now DELIVERING with battery %s", drone.getSerialNumber(), drone.getBattery()));
+				droneService.updateDroneState(drone.getId(), State.DELIVERING);
 				break;
 			case DELIVERING:
-				if (droneDelivered(drone)) {
-					System.out.println(String.format("Drone %s is now DELIVERED", drone.getSerialNumber()));
-					droneService.updateDroneState(drone.getId(), State.DELIVERED);
-				}
+				System.out.println(String.format("Drone %s is now DELIVERED with battery %s", drone.getSerialNumber(), drone.getBattery()));
+				droneService.updateDroneState(drone.getId(), State.DELIVERED);
 				break;
 			case DELIVERED:
-				if (droneCanReturn(drone)) {
-					System.out.println(String.format("Drone %s is now RETURNING", drone.getSerialNumber()));
-					droneService.updateDroneState(drone.getId(), State.RETURNING);
-					droneService.updateDroneBattery(drone.getId(), drone.getBattery() - 20f);
-				}
+				System.out.println(String.format("Drone %s is now RETURNING with battery %s", drone.getSerialNumber(), drone.getBattery()));
+				droneService.updateDroneState(drone.getId(), State.RETURNING);
 				break;
 			case RETURNING:
-				if (droneReturned(drone)) {
-					System.out.println(String.format("Drone %s is now IDLE", drone.getSerialNumber()));
-					droneService.updateDroneState(drone.getId(), State.IDLE);
-				}
+				System.out.println(String.format("Drone %s is now IDLE with battery %s", drone.getSerialNumber(), drone.getBattery()));
+				droneService.updateDroneState(drone.getId(), State.IDLE);
+				droneService.updateDroneBattery(drone.getId(), drone.getBattery() - 20f);
 				break;
 			}
 	}
@@ -77,25 +69,5 @@ public class DroneStateScheduler {
 		} catch (Exception e) {
 			return false;
 		}
-	}
-
-	private boolean droneIsLoaded(Drone drone) {
-		return true;
-	}
-
-	private boolean droneCanDeliver(Drone drone) {
-		return true;
-	}
-
-	private boolean droneDelivered(Drone drone) {
-		return true;
-	}
-
-	private boolean droneCanReturn(Drone drone) {
-		return true;
-	}
-
-	private boolean droneReturned(Drone drone) {
-		return true;
 	}
 }
