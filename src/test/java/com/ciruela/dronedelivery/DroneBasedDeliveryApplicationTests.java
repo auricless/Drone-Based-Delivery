@@ -48,7 +48,7 @@ class DroneBasedDeliveryApplicationTests {
 				.state(State.IDLE)
 				.build();
 		
-		ResponseEntity<String> createResponse = restTemplate.postForEntity("/api/drone/", actualDrone, String.class);
+		ResponseEntity<String> createResponse = restTemplate.postForEntity("/api/v1/drone/", actualDrone, String.class);
 		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 		
 		URI location = createResponse.getHeaders().getLocation();
@@ -103,7 +103,7 @@ class DroneBasedDeliveryApplicationTests {
 				.build();
 		
 		HttpEntity<Drone> request = new HttpEntity<>(actualDrone);
-		ResponseEntity<String> response = restTemplate.exchange("/api/drone/{id}/loadMedication", HttpMethod.PUT, request, String.class, 1L);
+		ResponseEntity<String> response = restTemplate.exchange("/api/v1/drone/{id}/loadMedication", HttpMethod.PUT, request, String.class, 1L);
 		
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
@@ -125,7 +125,7 @@ class DroneBasedDeliveryApplicationTests {
 	
 	@Test
 	void shouldReturnMedicationByDrone() {
-		ResponseEntity<String> response = restTemplate.getForEntity("api/drone/1/medications", String.class);
+		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/medications", String.class, 1L);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());
@@ -138,7 +138,7 @@ class DroneBasedDeliveryApplicationTests {
 	
 	@Test
 	void shouldReturnAvailableDroneForLoading() {
-		ResponseEntity<String> response = restTemplate.getForEntity("api/drone/1/medications", String.class);
+		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/medications", String.class, 1L);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());
@@ -149,7 +149,7 @@ class DroneBasedDeliveryApplicationTests {
 	
 	@Test
 	void shouldReturnDroneInformation() {
-		ResponseEntity<String> response = restTemplate.getForEntity("api/drone/1/medications", String.class);
+		ResponseEntity<String> response = restTemplate.getForEntity("api/v1/drone/{id}/medications", String.class, 1L);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		
 		DocumentContext documentContext = JsonPath.parse(response.getBody());

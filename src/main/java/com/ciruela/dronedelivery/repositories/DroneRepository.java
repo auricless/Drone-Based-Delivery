@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.ciruela.dronedelivery.entities.Drone;
 
 @Repository
-interface DroneRepository extends CrudRepository<Drone, Long> {
+public interface DroneRepository extends CrudRepository<Drone, Long> {
 
 }

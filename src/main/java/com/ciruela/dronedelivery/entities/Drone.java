@@ -11,6 +11,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,19 +33,27 @@ public class Drone {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(length = 100)
+	@Column(length = 100, nullable = false, unique = true)
+	@Size(max = 100)
 	private String serialNumber;
 	
 	@Enumerated(EnumType.STRING)
+    @Column(nullable = false)
 	private Model model;
 	
-	@Column(length = 1000)
-	private Integer weight;
+	@Max(1000)
+    @PositiveOrZero
+	@Column(nullable = false)
+	private Integer weightLimit;
 	
-	@Column(length = 100)
+	@Min(0)
+    @Max(100)
+    @PositiveOrZero
+	@Column(nullable = false)
 	private Float battery;
 	
 	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private State state;
 	
 	@OneToMany(fetch = FetchType.LAZY)
